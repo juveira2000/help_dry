@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -20,20 +19,15 @@ class _CameraScreenState extends State<CameraScreen> {
   String _imageBase64 = '';
   String _status = 'Nenhuma foto selecionada';
   String imageDescription = "";
+  // ignore: prefer_typing_uninitialized_variables
   var imageByte;
 
   // Access your API key as an environment variable (see "Set up your API key" above)
-  static const String apiKey = "AIzaSyBMgHx_NQTgdq0LaGPLm5yPtB-gL5IXjj8";
-
-  //  exit(1);
-
-  static String baseUrl =
-      "https://us-central1-aiplatform.googleapis.com/v1/projects/";
-  static String projectId = "alura-422819";
-  static String modelId = "gemini-1.0-pro";
-
-  //final apiKey = "AIzaSyBOOlA9Y578O8Zv6YWRPsKyfS-zS9eU7ew";
-
+  static const String apiKey = "DIGITE A KEY";
+  String texto =
+      "'Descreva essa imagem de forma simples,  mas o objetivo é auxiliar na decisão se é um produto reciclavel  ou organico, caso reciclavel , recomende  formas de reutiliza-lo em casa, quando não oferecer riscos, sabe o conceito de faça você mesmo ? Seria algo assim, só que receicle você mesmo'";
+  String sobre =
+      "'Este aplicativo utiliza inteligência artificial para te ajudar a identificar itens recicláveis e te sugerir formas criativas de reutilizá-los. Junte-se ao movimento pela reciclagem!'";
   Future<void> _pickImage() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.camera);
@@ -53,7 +47,7 @@ class _CameraScreenState extends State<CameraScreen> {
       setState(() {
         _imageFile =
             File(newImagePath); // Update with saved image path (opcional)
-        _status = 'Foto salva'; // Update status message (opcional)
+        _status = 'Salvo'; // Update status message (opcional)
         _imageBase64 = imageBase64;
 
         // Update with base64 string
@@ -61,89 +55,78 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  Future<String> sendPromptWithImage(
-      String textPrompt, String targetAudience) async {
-    // Prepare the image data
-
-    // Build the request body
-    final body = {
-      "inputs": [
-        {"prompt": textPrompt, "image_content": _imageBase64}
-      ],
-      "parameters": {
-        "temperature": 0.9,
-        "topK": 0,
-        "topP": 1.0,
-        "max_tokens": 2048,
-        "safety_settings": [
-          {
-            "harm_category": "HARASSMENT",
-            "block_threshold": "MEDIUM_AND_ABOVE"
-          },
-          {
-            "harm_category": "HATE_SPEECH",
-            "block_threshold": "MEDIUM_AND_ABOVE"
-          },
-          {
-            "harm_category": "SEXUALLY_EXPLICIT",
-            "block_threshold": "MEDIUM_AND_ABOVE"
-          },
-          {
-            "harm_category": "DANGEROUS_CONTENT",
-            "block_threshold": "MEDIUM_AND_ABOVE"
-          },
-        ],
-      },
-    };
-
-    // Build the request URL
-    final url = Uri.parse("$baseUrl$projectId/$modelId:generateContent");
-
-    // Send the POST request
-    final response = await http.post(
-      url,
-      body: jsonEncode(body),
-      headers: {
-        "Authorization": "Bearer $apiKey",
-        "Content-Type": "application/json",
-      },
+  Widget _buildImage() {
+    final image = FileImage(_imageFile!);
+    return Image(
+      image: ResizeImage(
+        image,
+        height: _imageFile == null ? 0 : 150,
+        width: _imageFile == null ? 0 : 150,
+      ), // Resize to 200x200
+      fit: BoxFit.cover, // Maintain aspect ratio while filling the container
     );
-
-    // Check for errors
-    if (response.statusCode != 200) {
-      throw Exception("Error sending request: ${response.statusCode}");
-    }
-
-    // Parse the response
-    final data = jsonDecode(response.body);
-    return data["text"];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Câmera e Envio de Foto'),
+        leading: const Icon(Icons.recycling),
+        title: const Row(
+          children: [
+            Text('Recicle'),
+
+            // Optional search icon
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (BuildContext context) {
+                  return Container(
+                    height: MediaQuery.of(context).size.height *
+                        0.20, // Adjust height as needed
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20.0),
+                        topRight: Radius.circular(20.0),
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(16.0),
+                    // ... rest of the popup content
+                    child: Text(sobre),
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const Text("Clique no Icone para abrir a camera"),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
             IconButton(
               iconSize: 100,
               color: Colors.blue,
               onPressed: _pickImage,
               icon: const Icon(Icons.camera_alt),
             ),
-            Text(_status),
-            const SizedBox(height: 20),
 
             SizedBox(
-                height: 200,
-                width: 200,
-                child: _imageFile != null
-                    ? Image.file(File(_imageFile!.path))
-                    : null),
+                height: _imageFile == null
+                    ? 0
+                    : MediaQuery.of(context).size.height * 0.15,
+                width: _imageFile == null
+                    ? 0
+                    : MediaQuery.of(context).size.width * 0.40,
+                child: _imageFile != null ? _buildImage() : null),
             ElevatedButton(
               //onPressed: _imageFile != null ? _sendImage : null,
 
@@ -152,8 +135,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 try {
                   final content = [
                     Content.data('image/jpeg', base64Decode(_imageBase64)),
-                    Content.text(
-                        'Descreva essa imagem de forma simples,  mas o objetivo é auxiliar na decisão se é um produto reciclavel  ou organico, caso reciclavel , recomende  formas de reutiliza-lo em casa, quando não oferecer riscos, sabe o conceito de faça você mesmo ? Seria algo assim, só que receicle você mesmo')
+                    Content.text(texto)
                   ];
 
                   final model = GenerativeModel(
@@ -164,17 +146,21 @@ class _CameraScreenState extends State<CameraScreen> {
                     context: context,
                     barrierDismissible: false,
                     builder: (BuildContext context) => Center(
-                      child: CircularProgressIndicator(),
+                      child: CircularProgressIndicator(
+                        color: Colors.green[50],
+                      ),
                     ),
                   );
 
                   final response = await model.generateContent(content);
 
                   // Hide loading indicator
+                  // ignore: use_build_context_synchronously
                   Navigator.pop(context);
 
                   // Show response in popup
                   showDialog(
+                    // ignore: use_build_context_synchronously
                     context: context,
                     builder: (BuildContext context) => AlertDialog(
                       title: const Text('Descrição da Imagem'),
@@ -184,14 +170,15 @@ class _CameraScreenState extends State<CameraScreen> {
                     ),
                   );
                 } catch (e) {
-                  debugPrint("error: ${e}");
+                  debugPrint("error: $e");
                   // Handle error (optional)
                 } finally {
                   // Ensure loading indicator is hidden even on error
+                  // ignore: use_build_context_synchronously
                   Navigator.maybePop(context);
                 }
               },
-              child: const Text('Enviar Foto'),
+              child: const Text('Perguntar ao Gemini'),
             ),
             //SizedBox(child: Text(_imageBase64)),
           ],
