@@ -153,22 +153,46 @@ class _CameraScreenState extends State<CameraScreen> {
                   final content = [
                     Content.data('image/jpeg', base64Decode(_imageBase64)),
                     Content.text(
-                        'Descreva essa imagem, de forma simples e para que serve')
+                        'Descreva essa imagem de forma simples,  mas o objetivo é auxiliar na decisão se é um produto reciclavel  ou organico, caso reciclavel , recomende  formas de reutiliza-lo em casa, quando não oferecer riscos, sabe o conceito de faça você mesmo ? Seria algo assim, só que receicle você mesmo')
                   ];
 
                   final model = GenerativeModel(
                       model: 'gemini-1.5-pro-latest', apiKey: apiKey);
 
+                  // Show loading indicator
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (BuildContext context) => Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+
                   final response = await model.generateContent(content);
-                  print("Resposta: ${response.text}");
+
+                  // Hide loading indicator
+                  Navigator.pop(context);
+
+                  // Show response in popup
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
+                      title: const Text('Descrição da Imagem'),
+                      content: SingleChildScrollView(
+                        child: Text(response.text.toString()),
+                      ),
+                    ),
+                  );
                 } catch (e) {
                   debugPrint("error: ${e}");
+                  // Handle error (optional)
+                } finally {
+                  // Ensure loading indicator is hidden even on error
+                  Navigator.maybePop(context);
                 }
               },
-
               child: const Text('Enviar Foto'),
             ),
-
             //SizedBox(child: Text(_imageBase64)),
           ],
         ),

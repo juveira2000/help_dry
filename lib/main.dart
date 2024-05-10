@@ -1,7 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+
 import 'package:help_dry/screen/camera_screen.dart';
 
 Future<void> main() async {
