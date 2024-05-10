@@ -39,3 +39,7 @@ Agradecimentos:
     Alura, pela excelente gama de conhecimento sobre Gemini.
 
 Juntos, podemos fazer a diferença! Vamos reciclar e reutilizar com criatividade! ♻️
+
+links úteis
+    https://ai.google.dev/gemini-api/docs?hl=pt-br
+    https://cloud.google.com/vertex-ai/generative-ai/docs/learn/overview?hl=pt-br&cloudshell=true
